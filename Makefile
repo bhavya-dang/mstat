@@ -5,7 +5,7 @@ BUILD_DIR := build
 
 build:
 	@mkdir -p $(BUILD_DIR)
-	go build -o $(BUILD_DIR)/$(BINARY_NAME) .
+	go build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/mstat
 
 install: build
 	@GOBIN=$${GOBIN:-$$(go env GOPATH)/bin}; \

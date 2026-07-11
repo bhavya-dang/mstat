@@ -12,7 +12,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:     "mstat [file...]",
-	Version: "0.1.0",
+	Version: "0.0.1",
 	Short:   "Modern stat replacement",
 	Long:    "mstat — a modern replacement for stat with bordered table output.",
 	Args:    cobra.MinimumNArgs(1),
