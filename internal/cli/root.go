@@ -10,13 +10,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
-	Use:     "mstat [file...]",
-	Version: "0.0.1",
-	Short:   "Modern stat replacement",
-	Long:    "mstat — a modern replacement for stat with bordered table output.",
-	Args:    cobra.MinimumNArgs(1),
-	RunE:    run,
+var (
+	noIcons     bool
+	simpleIcons bool
+	rootCmd     = &cobra.Command{
+		Use:     "mstat [file...]",
+		Version: "0.0.1",
+		Short:   "Modern stat replacement",
+		Long:    "mstat — a modern replacement for stat with bordered table output.",
+		Args:    cobra.MinimumNArgs(1),
+		RunE:    run,
+	}
+)
+
+func init() {
+	rootCmd.Flags().BoolVar(&noIcons, "no-icons", false, "disable Nerd Font icons")
+	rootCmd.Flags().BoolVar(&simpleIcons, "simple-icons", false, "show only basic icons")
+
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -35,7 +45,11 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no valid files")
 	}
 
-	output.Render(os.Stdout, entries)
+	opts := output.Options{
+		Icons:       !noIcons,
+		SimpleIcons: simpleIcons,
+	}
+	output.Render(os.Stdout, entries, opts)
 	return nil
 }
 

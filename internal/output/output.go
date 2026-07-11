@@ -6,7 +6,13 @@ import (
 	"github.com/bhavya-dang/mstat/internal/listing"
 )
 
-// Render writes the appropriate output for the given entries.
-func Render(w io.Writer, entries []listing.Entry) {
-	RenderTable(w, entries)
+// rendering table with different views and config options like no icons, simple icons, extended view, etc.
+type Options struct {
+	Icons       bool
+	SimpleIcons bool
+}
+
+// writes the output for the given entries.
+func Render(w io.Writer, entries []listing.Entry, opts Options) {
+	RenderTable(w, entries, opts)
 }
