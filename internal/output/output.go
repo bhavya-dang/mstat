@@ -8,8 +8,10 @@ import (
 
 // rendering table with different views and config options like no icons, simple icons, extended view, etc.
 type Options struct {
-	Icons       bool
-	SimpleIcons bool
+	Icons        bool
+	SimpleIcons  bool
+	BriefView    bool
+	ExtendedView bool
 }
 
 // writes the output for the given entries.

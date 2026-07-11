@@ -51,8 +51,8 @@ var nameIcons = map[string]string{
 	".gitignore":     "\ue702 ", // nf-dev-git
 	".gitmodules":    "\ue702 ",
 	".gitattributes": "\ue702 ",
-	"go.mod":         "\U000f07d3", // nf-custom-go
-	"go.sum":         "\U000f07d3",
+	"go.mod":         "\U000f07d3 ", // nf-custom-go
+	"go.sum":         "\U000f07d3 ",
 	"package.json":   "\ue74e ", // nf-dev-javascript
 	"package-lock":   "\ue74e ",
 	"tsconfig.json":  "\ue628 ", // nf-seti-typescript
@@ -74,7 +74,7 @@ var nameIcons = map[string]string{
 // extIcons maps file extensions (without dot, lowercased) to icons.
 var extIcons = map[string]string{
 	// Go
-	"go": "\U000f07d3",
+	"go": "\U000f07d3 ",
 	// Rust
 	"rs": "\ue7a8 ",
 	// Python

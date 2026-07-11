@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/bhavya-dang/mstat/internal/icons"
 	"github.com/bhavya-dang/mstat/internal/listing"
@@ -17,43 +18,66 @@ const (
 	alignRight
 )
 
-type tableColumn struct {
+// column headings
+type column struct {
 	header      string
 	align       cellAlign
 	width       int
 	headerWidth int
-	render      func(e listing.Entry, opts Options) string
+	render      func(listing.Entry, Options) string
 }
 
-var compactColumns = []struct {
-	name   string
-	header string
-	align  cellAlign
-	render func(listing.Entry, Options) string
-}{
-	{"name", "name", alignLeft, func(e listing.Entry, opts Options) string {
-		if opts.Icons {
-			return icons.Icon(e, opts.SimpleIcons) + e.Name
-		}
-		return e.Name
+var iconNameCol = column{header: "name", align: alignLeft, render: func(e listing.Entry, opts Options) string {
+	if opts.Icons {
+		return icons.Icon(e, opts.SimpleIcons) + e.Name
+	}
+	return e.Name
+}}
+
+// show only name, size, and type
+var briefColumns = []column{
+	iconNameCol,
+	{header: "size", align: alignRight, render: func(e listing.Entry, _ Options) string { return formatSize(e.Size) }},
+	{header: "type", align: alignLeft, render: func(e listing.Entry, _ Options) string { return e.Kind.String() }},
+}
+
+// default view
+var defaultColumns = []column{
+	iconNameCol,
+	{header: "size", align: alignRight, render: func(e listing.Entry, _ Options) string { return formatSize(e.Size) }},
+	{header: "type", align: alignLeft, render: func(e listing.Entry, _ Options) string { return e.Kind.String() }},
+	{header: "last modified", align: alignLeft, render: func(e listing.Entry, _ Options) string {
+		return formatWithRelative(e.Modified)
 	}},
-	{"size", "size", alignRight, func(e listing.Entry, _ Options) string { return formatSize(e.Size) }},
-	{"type", "type", alignLeft, func(e listing.Entry, _ Options) string { return e.Kind.String() }},
-	// {"links", "links", alignRight, func(e listing.Entry, _ Options) string { return fmt.Sprintf("%d", e.Links) }},
-	{"modified", "modified", alignLeft, func(e listing.Entry, _ Options) string { return e.Modified.Format("Jan 2 15:04") }},
-	{"perms", "perms", alignLeft, func(e listing.Entry, _ Options) string { return e.Permissions() }},
+	{header: "permissions", align: alignLeft, render: func(e listing.Entry, _ Options) string { return e.Permissions() }},
 }
 
-// writes bordered table output to w.
+// show all detail columns
+var extendedColumns = []column{
+	iconNameCol,
+	{header: "size", align: alignRight, render: func(e listing.Entry, _ Options) string { return formatSize(e.Size) }},
+	{header: "type", align: alignLeft, render: func(e listing.Entry, _ Options) string { return e.Kind.String() }},
+	{header: "last modified", align: alignLeft, render: func(e listing.Entry, _ Options) string {
+		return formatWithRelative(e.Modified)
+	}},
+	{header: "permissions", align: alignLeft, render: func(e listing.Entry, _ Options) string { return e.Permissions() }},
+	{header: "permissions octal", align: alignLeft, render: func(e listing.Entry, _ Options) string {
+		return fmt.Sprintf("%o", e.Mode.Perm())
+	}},
+	{header: "links", align: alignRight, render: func(e listing.Entry, _ Options) string { return fmt.Sprintf("%d", e.Links) }},
+}
+
+// write bordered table output to w.
 func RenderTable(w io.Writer, entries []listing.Entry, opts Options) {
 	if len(entries) == 0 {
 		return
 	}
-	renderCompactTable(w, entries, opts)
-}
 
-func renderCompactTable(w io.Writer, entries []listing.Entry, opts Options) {
-	cols := buildCompactColumns(opts)
+	cols := buildColumns(opts)
+	for i := range cols {
+		cols[i].headerWidth = runewidth.StringWidth(cols[i].header)
+	}
+
 	rows := make([][]string, len(entries))
 	for i, e := range entries {
 		row := make([]string, len(cols))
@@ -77,23 +101,20 @@ func renderCompactTable(w io.Writer, entries []listing.Entry, opts Options) {
 	fmt.Fprint(w, b.String())
 }
 
-func buildCompactColumns(opts Options) []tableColumn {
-	cols := make([]tableColumn, 0, len(compactColumns))
-	for _, c := range compactColumns {
-		hw := runewidth.StringWidth(c.header)
-		cols = append(cols, tableColumn{
-			header:      c.header,
-			align:       c.align,
-			headerWidth: hw,
-			render:      c.render,
-		})
+func buildColumns(opts Options) []column {
+	switch {
+	case opts.BriefView:
+		return briefColumns
+	case opts.ExtendedView:
+		return extendedColumns
+	default:
+		return defaultColumns
 	}
-	return cols
 }
 
-// --- border drawing ---
+// draw the borders for the table
 
-func writeBorderTop(b *strings.Builder, cols []tableColumn) {
+func writeBorderTop(b *strings.Builder, cols []column) {
 	b.WriteString("╭")
 	for i, col := range cols {
 		if i > 0 {
@@ -104,7 +125,7 @@ func writeBorderTop(b *strings.Builder, cols []tableColumn) {
 	b.WriteString("╮\n")
 }
 
-func writeHeaderRow(b *strings.Builder, cols []tableColumn) {
+func writeHeaderRow(b *strings.Builder, cols []column) {
 	b.WriteRune('│')
 	for i, col := range cols {
 		if i > 0 {
@@ -122,7 +143,7 @@ func writeHeaderRow(b *strings.Builder, cols []tableColumn) {
 	b.WriteString("│\n")
 }
 
-func writeBorderMid(b *strings.Builder, cols []tableColumn) {
+func writeBorderMid(b *strings.Builder, cols []column) {
 	b.WriteString("├")
 	for i, col := range cols {
 		if i > 0 {
@@ -133,7 +154,7 @@ func writeBorderMid(b *strings.Builder, cols []tableColumn) {
 	b.WriteString("┤\n")
 }
 
-func writeDataRow(b *strings.Builder, cols []tableColumn, row []string, cellWidths []int) {
+func writeDataRow(b *strings.Builder, cols []column, row []string, cellWidths []int) {
 	b.WriteRune('│')
 	for i, cell := range row {
 		if i > 0 {
@@ -146,7 +167,7 @@ func writeDataRow(b *strings.Builder, cols []tableColumn, row []string, cellWidt
 	b.WriteString("│\n")
 }
 
-func writeBorderBottom(b *strings.Builder, cols []tableColumn) {
+func writeBorderBottom(b *strings.Builder, cols []column) {
 	b.WriteString("╰")
 	for i, col := range cols {
 		if i > 0 {
@@ -171,7 +192,7 @@ func measureRows(rows [][]string) [][]int {
 	return widths
 }
 
-func computeWidths(cols []tableColumn, rows [][]string, widths [][]int) {
+func computeWidths(cols []column, rows [][]string, widths [][]int) {
 	for i := range cols {
 		cols[i].width = cols[i].headerWidth
 	}
@@ -196,6 +217,25 @@ func alignCell(cell string, cellWidth, width int, align cellAlign) string {
 }
 
 // --- formatting helpers ---
+func formatWithRelative(t time.Time) string {
+	return t.Format("Jan 2, 2006 15:04") + " (" + formatRelativeTime(t) + ")"
+}
+
+func formatRelativeTime(t time.Time) string {
+	d := time.Since(t)
+	switch {
+	case d < time.Minute:
+		return "just now"
+	case d < time.Hour:
+		return fmt.Sprintf("%dm ago", int(d.Minutes()))
+	case d < 24*time.Hour:
+		return fmt.Sprintf("%dh ago", int(d.Hours()))
+	case d < 7*24*time.Hour:
+		return fmt.Sprintf("%dd ago", int(d.Hours()/24))
+	default:
+		return t.Format("Jan 2 15:04")
+	}
+}
 
 func formatSize(b int64) string {
 	const (

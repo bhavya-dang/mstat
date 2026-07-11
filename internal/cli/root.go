@@ -11,9 +11,11 @@ import (
 )
 
 var (
-	noIcons     bool
-	simpleIcons bool
-	rootCmd     = &cobra.Command{
+	noIcons      bool
+	simpleIcons  bool
+	briefView    bool
+	extendedView bool
+	rootCmd      = &cobra.Command{
 		Use:     "mstat [file...]",
 		Version: "0.0.1",
 		Short:   "Modern stat replacement",
@@ -24,9 +26,13 @@ var (
 )
 
 func init() {
-	rootCmd.Flags().BoolVar(&noIcons, "no-icons", false, "disable Nerd Font icons")
-	rootCmd.Flags().BoolVar(&simpleIcons, "simple-icons", false, "show only basic icons")
+	// icons
+	rootCmd.Flags().BoolVarP(&noIcons, "no-icons", "n", false, "disable Nerd Font icons")
+	rootCmd.Flags().BoolVarP(&simpleIcons, "simple-icons", "s", false, "show only basic icons")
 
+	// views
+	rootCmd.Flags().BoolVarP(&briefView, "brief", "b", false, "show minimal output (name, size, type)")
+	rootCmd.Flags().BoolVarP(&extendedView, "extended", "x", false, "show extended output with all details")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -46,8 +52,10 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := output.Options{
-		Icons:       !noIcons,
-		SimpleIcons: simpleIcons,
+		Icons:        !noIcons,
+		SimpleIcons:  simpleIcons,
+		BriefView:    briefView,
+		ExtendedView: extendedView,
 	}
 	output.Render(os.Stdout, entries, opts)
 	return nil
