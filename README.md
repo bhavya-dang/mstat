@@ -1,8 +1,16 @@
+<div align="center">
+
 # mstat
 
 A modern stat alternative with beautiful bordered tables
 
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)](https://go.dev/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![Release](https://img.shields.io/github/v/release/bhavya-dang/mstat)](https://github.com/bhavya-dang/mstat/releases)
+
 ![demo](./preview/3.png)
+
+</div>
 
 ## Installation
 
