@@ -1,6 +1,6 @@
 # mstat
 
-A modern stat alternative with bautiful bordered tables
+A modern stat alternative with beautiful bordered tables
 
 ![demo](./preview/3.png)
 
@@ -9,7 +9,7 @@ A modern stat alternative with bautiful bordered tables
 ### Prerequisites
 
 - [Go 1.25+](https://go.dev/)
-- Any [Nerd font](https://www.nerdfonts.com/#home)
+- Any [Nerd Font](https://www.nerdfonts.com/#home) (optional, for icons)
 
 ### Using Go
 
@@ -30,14 +30,50 @@ make install
 ```bash
 git clone https://github.com/bhavya-dang/mstat.git
 cd mstat
-go build -o build/mstat .
-cp build/mstat "$GOPATH/bin/mstat"
+go build -o build/mstat ./cmd/mstat
+cp build/mstat "$(go env GOPATH)/bin/mstat"
 ```
 
 ## Usage
 
 ```bash
-mstate <arg1> <arg2> ...
+mstat [file...] [flags]
+```
+
+## Flags
+
+| Flag             | Short | Description                                |
+| ---------------- | ----- | ------------------------------------------ |
+| `--brief`        | `-b`  | Minimal output (name, size)                |
+| `--extended`     | `-x`  | Extended output with all details           |
+| `--no-icons`     | `-n`  | Disable Nerd Font icons                    |
+| `--simple-icons` | `-s`  | Show only basic icons (folder, file, link) |
+| `--version`      | `-v`  | Show version                               |
+
+### View Modes
+
+**Default:**
+name | size | type | last modified | permissions
+
+**Brief (-b):**
+name | size | type
+
+**Extended (-x):**
+name | size | type | last modified | permissions | permissions octal | links
+
+### Icons
+
+By default, mstat shows language-specific icons for files (Go, Typescript, Python, etc.).
+Use `--simple-icons` to show only basic icons (folder, file, link, etc.).
+Use `--no-icons` to disable all icons.
+
+## Examples
+
+```bash
+mstat .
+mstat go.mod main.go README.md
+mstat -n LICENSE
+mstat -x internal/
 ```
 
 ## License
@@ -46,4 +82,4 @@ MIT License
 
 ## Contributing & Issues
 
-This is an open-source project. Feel free to contribute to existing issues or open a new one if find anything!
+This is an open-source project. Feel free to contribute to existing issues or open a new one if you find anything!
