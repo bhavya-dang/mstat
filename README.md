@@ -8,7 +8,7 @@ A modern stat alternative with beautiful bordered tables
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![Release](https://img.shields.io/github/v/release/bhavya-dang/mstat)](https://github.com/bhavya-dang/mstat/releases)
 
-![demo](./preview/3.png)
+![demo](./preview/4.png)
 
 </div>
 
