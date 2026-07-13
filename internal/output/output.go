@@ -12,6 +12,7 @@ type Options struct {
 	SimpleIcons  bool
 	BriefView    bool
 	ExtendedView bool
+	NoColor      bool
 }
 
 // writes the output for the given entries.

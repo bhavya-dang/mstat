@@ -41,16 +41,16 @@ func (k Kind) String() string {
 
 // Entry holds metadata for a single filesystem path.
 type Entry struct {
-	Name string
-	Kind Kind
-	Mode fs.FileMode
-	Size int64
+	Name  string
+	Kind  Kind
+	Mode  fs.FileMode
+	Size  int64
 	Links uint64
 
 	Modified time.Time
 }
 
-// Permissions returns the 10-char permission string (e.g. "-rw-r--r--").
+// return the 10-char permission string (e.g. "-rw-r--r--").
 func (e *Entry) Permissions() string {
 	var buf [10]byte
 	buf[0] = fileTypeChar(e.Mode)

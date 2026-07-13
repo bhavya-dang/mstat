@@ -8,7 +8,7 @@ A modern stat alternative with beautiful bordered tables
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![Release](https://img.shields.io/github/v/release/bhavya-dang/mstat)](https://github.com/bhavya-dang/mstat/releases)
 
-![demo](./preview/4.png)
+![demo](./preview/5.png)
 
 </div>
 
@@ -74,6 +74,11 @@ name | size | type | last modified | permissions | permissions octal | links
 By default, mstat shows language-specific icons for files (Go, Typescript, Python, etc.).
 Use `--simple-icons` to show only basic icons (folder, file, link, etc.).
 Use `--no-icons` to disable all icons.
+
+### Colors
+
+By default, directories and their icons will appear in ansi blue color. I am planning to make this configurable soon when configuration system is implemented.
+This can be disabled using the `--no-colors` flag.
 
 ## Examples
 

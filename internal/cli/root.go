@@ -15,6 +15,7 @@ var (
 	simpleIcons  bool
 	briefView    bool
 	extendedView bool
+	noColor      bool
 	rootCmd      = &cobra.Command{
 		Use:     "mstat [file...]",
 		Version: "0.0.1",
@@ -33,6 +34,9 @@ func init() {
 	// views
 	rootCmd.Flags().BoolVarP(&briefView, "brief", "b", false, "show minimal output (name, size, type)")
 	rootCmd.Flags().BoolVarP(&extendedView, "extended", "x", false, "show extended output with all details")
+
+	// color
+	rootCmd.Flags().BoolVar(&noColor, "no-color", false, "disable colored output")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -56,6 +60,7 @@ func run(cmd *cobra.Command, args []string) error {
 		SimpleIcons:  simpleIcons,
 		BriefView:    briefView,
 		ExtendedView: extendedView,
+		NoColor:      noColor,
 	}
 	output.Render(os.Stdout, entries, opts)
 	return nil

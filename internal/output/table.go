@@ -28,11 +28,36 @@ type column struct {
 }
 
 var iconNameCol = column{header: "name", align: alignLeft, render: func(e listing.Entry, opts Options) string {
+	icon := ""
 	if opts.Icons {
-		return icons.Icon(e, opts.SimpleIcons) + e.Name
+		icon = icons.Icon(e, opts.SimpleIcons)
 	}
-	return e.Name
+	label := icon + e.Name
+	if e.Kind == listing.KindDirectory && !opts.NoColor {
+		label = colorBlue(label)
+	}
+	return label
 }}
+
+const (
+	ansiBlue  = "\x1b[1;34m"
+	ansiReset = "\x1b[0m"
+)
+
+func colorBlue(s string) string {
+	return ansiBlue + s + ansiReset
+}
+
+// removes ANSI escape sequences so runewidth measures visible width only.
+var ansiReplacer = strings.NewReplacer(
+	"\x1b[0m", "",
+	"\x1b[1;34m", "",
+	"\x1b[34m", "",
+)
+
+func stripAnsi(s string) string {
+	return ansiReplacer.Replace(s)
+}
 
 // show only name, size, and type
 var briefColumns = []column{
@@ -185,7 +210,7 @@ func measureRows(rows [][]string) [][]int {
 	for ri, row := range rows {
 		rw := make([]int, len(row))
 		for ci, cell := range row {
-			rw[ci] = runewidth.StringWidth(cell)
+			rw[ci] = runewidth.StringWidth(stripAnsi(cell))
 		}
 		widths[ri] = rw
 	}
