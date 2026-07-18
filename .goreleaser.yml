@@ -9,6 +9,8 @@ builds:
     dir: ./cmd/mstat
     env:
       - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}}
     goos:
       - linux
       - darwin
@@ -33,3 +35,16 @@ changelog:
     exclude:
       - "^docs:"
       - "^chore:"
+
+brews:
+  - repository:
+      owner: bhavya-dang
+      name: homebrew-mstat
+      token: "{{ .Env.GH_PAT }}"
+    directory: Formula
+    homepage: "https://github.com/bhavya-dang/mstat"
+    description: "Modern stat replacement with bordered table output"
+    license: "MIT"
+    dependencies:
+      - name: git
+        os: mac

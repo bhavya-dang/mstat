@@ -1,11 +1,13 @@
 BINARY_NAME := mstat
 BUILD_DIR := build
+VERSION := dev
+LDFLAGS := -s -w -X main.version=$(VERSION)
 
 .PHONY: build install run clean test lint
 
 build:
 	@mkdir -p $(BUILD_DIR)
-	go build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/mstat
+	go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/mstat
 
 install: build
 	@GOBIN=$${GOBIN:-$$(go env GOPATH)/bin}; \
