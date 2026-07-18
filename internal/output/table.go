@@ -3,9 +3,12 @@ package output
 import (
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/bhavya-dang/mstat/internal/git"
 	"github.com/bhavya-dang/mstat/internal/icons"
 	"github.com/bhavya-dang/mstat/internal/listing"
 	"github.com/mattn/go-runewidth"
@@ -27,25 +30,83 @@ type column struct {
 	render      func(listing.Entry, Options) string
 }
 
+// returns the file name based on path display flags.
+// Default is relative path from cwd; --full-path shows absolute path.
+func displayName(e listing.Entry, opts Options) string {
+	if opts.FullPath {
+		return e.Path
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		return e.Name
+	}
+	rel, err := filepath.Rel(wd, e.Path)
+	if err != nil {
+		return e.Name
+	}
+	return rel
+}
+
 var iconNameCol = column{header: "name", align: alignLeft, render: func(e listing.Entry, opts Options) string {
 	icon := ""
 	if opts.Icons {
 		icon = icons.Icon(e, opts.SimpleIcons)
 	}
-	label := icon + e.Name
+	label := icon + displayName(e, opts)
 	if e.Kind == listing.KindDirectory && !opts.NoColor {
 		label = colorBlue(label)
 	}
 	return label
 }}
 
+var gitCol = column{header: "git", align: alignLeft, render: func(e listing.Entry, opts Options) string {
+	if opts.GitMap == nil {
+		return ""
+	}
+	s, ok := opts.GitMap[e.Path]
+	if !ok || s == git.Clean {
+		if opts.Porcelain {
+			return "-"
+		}
+		return colorGreen("clean")
+	}
+	if opts.Porcelain {
+		return string(s)
+	}
+	return colorGitStatus(s)
+}}
+
 const (
-	ansiBlue  = "\x1b[1;34m"
-	ansiReset = "\x1b[0m"
+	ansiBlue   = "\x1b[1;34m"
+	ansiGreen  = "\x1b[32m"
+	ansiRed    = "\x1b[31m"
+	ansiYellow = "\x1b[33m"
+	ansiCyan   = "\x1b[36m"
+	ansiReset  = "\x1b[0m"
 )
 
 func colorBlue(s string) string {
 	return ansiBlue + s + ansiReset
+}
+
+func colorGreen(s string) string {
+	return ansiGreen + s + ansiReset
+}
+
+func colorGitStatus(s git.Status) string {
+	label := s.String()
+	switch s {
+	case git.Modified:
+		return ansiYellow + label + ansiReset
+	case git.Added:
+		return ansiGreen + label + ansiReset
+	case git.Deleted:
+		return ansiRed + label + ansiReset
+	case git.Untracked:
+		return ansiCyan + label + ansiReset
+	default:
+		return label
+	}
 }
 
 // removes ANSI escape sequences so runewidth measures visible width only.
@@ -53,6 +114,10 @@ var ansiReplacer = strings.NewReplacer(
 	"\x1b[0m", "",
 	"\x1b[1;34m", "",
 	"\x1b[34m", "",
+	"\x1b[32m", "",
+	"\x1b[31m", "",
+	"\x1b[33m", "",
+	"\x1b[36m", "",
 )
 
 func stripAnsi(s string) string {
@@ -100,7 +165,7 @@ func RenderTable(w io.Writer, entries []listing.Entry, opts Options) {
 
 	cols := buildColumns(opts)
 	for i := range cols {
-		cols[i].headerWidth = runewidth.StringWidth(cols[i].header)
+		cols[i].headerWidth = runewidth.StringWidth(stripAnsi(cols[i].header))
 	}
 
 	rows := make([][]string, len(entries))
@@ -127,14 +192,26 @@ func RenderTable(w io.Writer, entries []listing.Entry, opts Options) {
 }
 
 func buildColumns(opts Options) []column {
+	var cols []column
 	switch {
 	case opts.BriefView:
-		return briefColumns
+		cols = briefColumns
 	case opts.ExtendedView:
-		return extendedColumns
+		cols = extendedColumns
 	default:
-		return defaultColumns
+		cols = defaultColumns
 	}
+
+	if opts.GitMap != nil {
+		// insert git column after name
+		newCols := make([]column, 0, len(cols)+1)
+		newCols = append(newCols, cols[0]) // name
+		newCols = append(newCols, gitCol)
+		newCols = append(newCols, cols[1:]...)
+		cols = newCols
+	}
+
+	return cols
 }
 
 // draw the borders for the table

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/bhavya-dang/mstat/internal/git"
 	"github.com/bhavya-dang/mstat/internal/listing"
 	"github.com/bhavya-dang/mstat/internal/output"
 	"github.com/bhavya-dang/mstat/internal/pathutil"
@@ -16,15 +17,22 @@ var (
 	briefView    bool
 	extendedView bool
 	noColor      bool
+	noGit        bool
+	porcelain    bool
+	fullPath     bool
 	rootCmd      = &cobra.Command{
-		Use:     "mstat [file...]",
-		Version: "0.0.1",
-		Short:   "Modern stat replacement",
-		Long:    "mstat — a modern replacement for stat with bordered table output.",
-		Args:    cobra.MinimumNArgs(1),
-		RunE:    run,
+		Use:   "mstat [file...]",
+		Short: "Modern stat replacement",
+		Long:  "mstat — a modern replacement for stat with bordered table output.",
+		Args:  cobra.MinimumNArgs(1),
+		RunE:  run,
 	}
 )
+
+// SetVersion sets the version shown by mstat --version.
+func SetVersion(v string) {
+	rootCmd.Version = v
+}
 
 func init() {
 	// icons
@@ -37,10 +45,18 @@ func init() {
 
 	// color
 	rootCmd.Flags().BoolVar(&noColor, "no-color", false, "disable colored output")
+
+	// git
+	rootCmd.Flags().BoolVar(&noGit, "no-git", false, "disable git status column")
+	rootCmd.Flags().BoolVar(&porcelain, "porcelain", false, "machine-readable output (no borders, no colors)")
+
+	// paths
+	rootCmd.Flags().BoolVar(&fullPath, "full-path", false, "show full absolute paths")
 }
 
 func run(cmd *cobra.Command, args []string) error {
 	var entries []listing.Entry
+	var paths []string
 	for _, arg := range args {
 		path := pathutil.Expand(arg)
 		e, err := listing.Stat(path, false)
@@ -49,10 +65,19 @@ func run(cmd *cobra.Command, args []string) error {
 			continue
 		}
 		entries = append(entries, e)
+		paths = append(paths, path)
 	}
 
 	if len(entries) == 0 {
 		return fmt.Errorf("no valid files")
+	}
+
+	// git status
+	var gitMap map[string]git.Status
+	if !noGit {
+		if root := git.RepoRoot("."); root != "" {
+			gitMap = git.StatusMap(root)
+		}
 	}
 
 	opts := output.Options{
@@ -61,6 +86,10 @@ func run(cmd *cobra.Command, args []string) error {
 		BriefView:    briefView,
 		ExtendedView: extendedView,
 		NoColor:      noColor,
+		NoGit:        noGit,
+		Porcelain:    porcelain,
+		FullPath:     fullPath,
+		GitMap:       gitMap,
 	}
 	output.Render(os.Stdout, entries, opts)
 	return nil

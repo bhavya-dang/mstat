@@ -39,9 +39,10 @@ func (k Kind) String() string {
 	}
 }
 
-// Entry holds metadata for a single filesystem path.
+// metadata for a single filesystem path.
 type Entry struct {
 	Name  string
+	Path  string // absolute path as provided to Stat
 	Kind  Kind
 	Mode  fs.FileMode
 	Size  int64

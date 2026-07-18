@@ -3,9 +3,10 @@ package listing
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
-// Stat collects metadata for a single path.
+// collects metadata for a single path.
 func Stat(path string, dereference bool) (Entry, error) {
 	var info os.FileInfo
 	var err error
@@ -18,9 +19,11 @@ func Stat(path string, dereference bool) (Entry, error) {
 		return Entry{}, fmt.Errorf("stat %s: %w", path, err)
 	}
 
+	abs, _ := filepath.Abs(path)
 	mode := info.Mode()
 	return Entry{
 		Name:     info.Name(),
+		Path:     abs,
 		Kind:     kindFromMode(mode),
 		Mode:     mode,
 		Size:     info.Size(),

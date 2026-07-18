@@ -1,3 +1,4 @@
 build/
 mstat
 *.exe
+.DS_Store
