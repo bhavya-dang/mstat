@@ -19,6 +19,12 @@ A modern stat alternative with beautiful bordered tables
 - [Go 1.25+](https://go.dev/)
 - Any [Nerd Font](https://www.nerdfonts.com/#home) (optional, for icons)
 
+### Using brew
+
+```bash
+brew install bhavya-dang/mstat/mstat
+```
+
 ### Using Go
 
 ```bash
