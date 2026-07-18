@@ -1,6 +1,7 @@
 package git
 
 import (
+	"path/filepath"
 	"testing"
 )
 
@@ -14,28 +15,28 @@ func TestParsePorcelain(t *testing.T) {
 			name:  "modified file",
 			input: "M  file.txt",
 			expect: map[string]Status{
-				"/repo/file.txt": Modified,
+				filepath.Join("/repo", "file.txt"): Modified,
 			},
 		},
 		{
 			name:  "untracked file",
 			input: "?? newfile.txt",
 			expect: map[string]Status{
-				"/repo/newfile.txt": Untracked,
+				filepath.Join("/repo", "newfile.txt"): Untracked,
 			},
 		},
 		{
 			name:  "deleted file",
 			input: " D deleted.txt",
 			expect: map[string]Status{
-				"/repo/deleted.txt": Deleted,
+				filepath.Join("/repo", "deleted.txt"): Deleted,
 			},
 		},
 		{
 			name:  "added file",
 			input: "A  staged.txt",
 			expect: map[string]Status{
-				"/repo/staged.txt": Added,
+				filepath.Join("/repo", "staged.txt"): Added,
 			},
 		},
 		{
@@ -44,16 +45,16 @@ func TestParsePorcelain(t *testing.T) {
 				"?? b.txt\n" +
 				" D c.txt",
 			expect: map[string]Status{
-				"/repo/a.txt": Modified,
-				"/repo/b.txt": Untracked,
-				"/repo/c.txt": Deleted,
+				filepath.Join("/repo", "a.txt"): Modified,
+				filepath.Join("/repo", "b.txt"): Untracked,
+				filepath.Join("/repo", "c.txt"): Deleted,
 			},
 		},
 		{
 			name:  "renamed file",
 			input: "R  old.txt -> new.txt",
 			expect: map[string]Status{
-				"/repo/new.txt": Renamed,
+				filepath.Join("/repo", "new.txt"): Renamed,
 			},
 		},
 		{
@@ -65,7 +66,7 @@ func TestParsePorcelain(t *testing.T) {
 			name:  "both modified index and worktree",
 			input: "MM both.txt",
 			expect: map[string]Status{
-				"/repo/both.txt": Modified,
+				filepath.Join("/repo", "both.txt"): Modified,
 			},
 		},
 	}
